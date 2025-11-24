@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="..\main.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\simple.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\shared_mem.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\vectorized.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\dispatch.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\high_shared.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\tensor_core.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\utils\timer.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\utils\validator.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="E:\cuda_project\matmul_4070ti\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{CDB806BE-33BD-3AFD-9378-4568270DFB1A}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
