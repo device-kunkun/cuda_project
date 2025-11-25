@@ -20,6 +20,9 @@ void launch_gemm(const half_t* A, const half_t* B, float_t* C,
         case GemmAlgo::Vectorized:
             vectorized_matmul(A, B, C, M, N, K, cfg, stream);
             break;
+        case GemmAlgo::VectorizedOpt:
+            vectorized_opt_matmul(A, B, C, M, N, K, cfg, stream);
+            break;
         case GemmAlgo::TensorCore:
             tensor_core_matmul(A, B, C, M, N, K, cfg, stream);
             break;

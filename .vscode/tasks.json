@@ -4,7 +4,13 @@
         {
             "label": "cmake-configure",
             "type": "shell",
-            "command": "cmake -S . -B build -G \"Visual Studio 17 2022\" -A x64",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe",
+            "args": [
+                "-S", ".",
+                "-B", "build",
+                "-G", "Visual Studio 17 2022",
+                "-A", "x64"
+            ],
             "problemMatcher": [
                 "$msCompile"
             ]
@@ -12,7 +18,12 @@
         {
             "label": "build-matmul",
             "type": "shell",
-            "command": "cmake --build build --config Release --target matmul_test",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe",
+            "args": [
+                "--build", "build",
+                "--config", "Release",
+                "--target", "matmul_test"
+            ],
             "dependsOn": [
                 "cmake-configure"
             ],
@@ -24,6 +35,37 @@
             "label": "run-matmul",
             "type": "shell",
             "command": ".\\build\\bin\\matmul_test.exe",
+            "dependsOn": "build-matmul",
+            "problemMatcher": []
+        },
+        {
+            "label": "run-matmul-and-plot",
+            "type": "shell",
+            "command": ".\\build\\bin\\matmul_test.exe; python .\\scripts\\plot.py",
+            "dependsOn": "build-matmul",
+            "problemMatcher": []
+        },
+        {
+            "label": "sweep-and-plot",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-File", ".\\scripts\\sweep.ps1"
+            ],
+            "dependsOn": "build-matmul",
+            "problemMatcher": []
+        },
+        {
+            "label": "sweep-and-profile-both",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-File", ".\\scripts\\sweep.ps1",
+                "-ProfileShared",
+                "-ProfileTensorCore"
+            ],
             "dependsOn": "build-matmul",
             "problemMatcher": []
         }

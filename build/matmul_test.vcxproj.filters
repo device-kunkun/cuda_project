@@ -13,6 +13,9 @@
     <CudaCompile Include="..\src\kernels\vectorized.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\src\kernels\vectorized_opt.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
     <CudaCompile Include="..\src\kernels\dispatch.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
@@ -20,6 +23,15 @@
       <Filter>Source Files</Filter>
     </CudaCompile>
     <CudaCompile Include="..\src\kernels\tensor_core.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\softmax.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\layernorm.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels\batched.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
     <CudaCompile Include="..\src\utils\timer.cu">

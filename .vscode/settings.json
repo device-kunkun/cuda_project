@@ -2,11 +2,10 @@
     "cmake.generator": "Visual Studio 17 2022",
     "cmake.buildDirectory": "${workspaceFolder}/build",
     "cmake.configureOnOpen": false,
-    "cmake.configureArgs": [
-        "-A", "x64"
-    ],
+    "cmake.configureArgs": [],
     "cmake.buildArgs": [
         "--config", "Release"
     ],
-    "cmake.sourceDirectory": "${workspaceFolder}"
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "cmake.cmakePath": "C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\Common7\\\\IDE\\\\CommonExtensions\\\\Microsoft\\\\CMake\\\\CMake\\\\bin\\\\cmake.exe"
 }

@@ -34,9 +34,13 @@ add_executable(matmul_test
 		src/kernels/simple.cu
 		src/kernels/shared_mem.cu
 		src/kernels/vectorized.cu
+		src/kernels/vectorized_opt.cu
 		src/kernels/dispatch.cu
 		src/kernels/high_shared.cu
 		src/kernels/tensor_core.cu
+		src/kernels/softmax.cu
+		src/kernels/layernorm.cu
+		src/kernels/batched.cu
 		src/utils/timer.cu
 		src/utils/validator.cu
 )
