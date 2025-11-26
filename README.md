@@ -86,7 +86,4 @@ git push origin test_qa
 ```
 `test_qa` 可用于添加 CI/自动化测试。
 
-## 扩展建议
-- 新增核：在 `kernels.h` 声明、`src/kernels/` 实现，若是 GEMM 变体可接入 `dispatch`。
-- 调整 sweep：修改 `main.cu` 中的 `configs` 与 `cases`。
-- 添加 CI：在 `scripts/` 增加测试脚本，或配置 GitHub Actions 进行构建/运行。
+
