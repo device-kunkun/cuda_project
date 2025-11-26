@@ -68,6 +68,74 @@
             ],
             "dependsOn": "build-matmul",
             "problemMatcher": []
+        },
+        {
+            "label": "perf-runner",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                ".\\scripts\\perf_runner.py"
+            ],
+            "dependsOn": "build-matmul",
+            "problemMatcher": []
+        },
+        {
+            "label": "perf-runner-ncu",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                ".\\scripts\\perf_runner.py",
+                "--ncu",
+                "shared_mem_matmul_kernel",
+                "tensor_core_kernel"
+            ],
+            "dependsOn": "build-matmul",
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "NCU_PATH": "C:\\Program Files\\NVIDIA Corporation\\Nsight Compute 2024.2.1\\ncu.exe"
+                }
+            }
+        },
+        {
+            "label": "perf-runner-ncu-and-serve",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-Command", "python .\\scripts\\perf_runner.py --ncu shared_mem_matmul_kernel tensor_core_kernel; python -m http.server 8000"
+            ],
+            "dependsOn": "build-matmul",
+            "problemMatcher": [],
+            "isBackground": true,
+            "options": {
+                "env": {
+                    "NCU_PATH": "C:\\Program Files\\NVIDIA Corporation\\Nsight Compute 2024.2.1\\ncu.exe"
+                }
+            }
+        },
+        {
+            "label": "serve-dashboard",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-Command", "python -m http.server 8000"
+            ],
+            "problemMatcher": [],
+            "isBackground": true
+        },
+        {
+            "label": "perf-runner-and-serve",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-Command", "python .\\scripts\\perf_runner.py; python -m http.server 8000"
+            ],
+            "dependsOn": "build-matmul",
+            "problemMatcher": [],
+            "isBackground": true
         }
     ]
 }

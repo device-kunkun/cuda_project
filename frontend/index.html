@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>GEMM 性能看板</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 16px;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .table th,
+    .table td {
+      padding: 12px 16px;
+      text-align: center;
+      border: 1px solid #334155;
+    }
+
+    .pill {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .pill.ok {
+      background: #10b98133;
+      color: #10b981;
+    }
+
+    .pill.bad {
+      background: #ef444433;
+      color: #ef4444;
+    }
+
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    select {
+      background: #0f172a;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+
+    a {
+      color: #93c5fd;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script>
+    const { useState, useEffect, useMemo } = React;
+
+    const fetchJSON = async () => {
+      const res = await fetch(new URL("/scripts/perf_summary.json", window.location.origin), { cache: "no-store" });
+      if (!res.ok) throw new Error("加载 perf_summary.json 失败");
+      return res.json();
+    };
+
+    const fetchNcuIndex = async () => {
+      const res = await fetch(new URL("/reports/ncu_index.json", window.location.origin), { cache: "no-store" });
+      if (!res.ok) throw new Error("未找到 ncu 报告索引");
+      return res.json();
+    };
+
+    const normalizePath = (file) => {
+      let f = file.replace(/\\/g, "/");
+      if (/^https?:\/\//i.test(f)) return f;
+      if (/^[A-Za-z]:/.test(f)) {
+        const parts = f.split("/");
+        f = "/reports/" + parts[parts.length - 1];
+      } else {
+        if (!f.startsWith("/")) f = "/" + f;
+      }
+      return new URL(f, window.location.origin).toString();
+    };
+
+    const fetchText = async (path) => {
+      const res = await fetch(path, { cache: "no-store" });
+      if (!res.ok) throw new Error("加载报告失败");
+      return res.text();
+    };
+
+    const formatNumber = (v, digits = 2) => Number.isFinite(v) ? v.toFixed(digits) : "-";
+
+    function App() {
+      const [data, setData] = useState([]);
+      const [ncuList, setNcuList] = useState([]);
+      const [ncuText, setNcuText] = useState("");
+      const [ncuSel, setNcuSel] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState("");
+      const [algoFilter, setAlgoFilter] = useState("all");
+
+      const algos = useMemo(() => {
+        const s = new Set(data.map(d => d.algo));
+        return ["all", ...Array.from(s)];
+      }, [data]);
+
+      const filtered = useMemo(() => {
+        return data.filter(d => algoFilter === "all" || d.algo === algoFilter)
+          .sort((a, b) => a.M - b.M || a.algo.localeCompare(b.algo));
+      }, [data, algoFilter]);
+
+      const refresh = async () => {
+        setLoading(true); setError("");
+        try {
+          const j = await fetchJSON();
+          setData(j);
+          try {
+            const ncu = await fetchNcuIndex();
+            const norm = ncu.map(r => ({ ...r, file: normalizePath(r.file) }));
+            setNcuList(norm);
+            if (norm.length && !ncuSel) setNcuSel(norm[0].file);
+          } catch (e) {
+            setNcuList([]);
+            setNcuSel("");
+          }
+        } catch (e) {
+          setError(e.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => { refresh(); }, []);
+      useEffect(() => {
+        let isMounted = true;
+
+        const loadReport = async () => {
+          if (!ncuSel) {
+            if (isMounted) setNcuText("请选择报告");
+            return;
+          }
+          try {
+            const txt = await fetchText(normalizePath(ncuSel));
+            if (isMounted) setNcuText(txt);
+          } catch (e) {
+            if (isMounted) setNcuText("加载失败：" + (e.message || "未知错误"));
+          }
+        };
+        loadReport();
+
+        return () => {
+          isMounted = false;
+        };
+      }, [ncuSel]);
+
+      useEffect(() => {
+        if (!filtered.length) return;
+
+        const ctx = document.getElementById("chart").getContext("2d");
+        const byAlgo = {};
+        filtered.forEach(r => {
+          (byAlgo[r.algo] ||= []).push({ x: r.M, y: r.gflops_mean });
+        });
+
+        const colors = ["#22d3ee", "#a855f7", "#38bdf8", "#f97316", "#22c55e", "#eab308", "#f43f5e"];
+        const datasets = Object.entries(byAlgo).map(([algo, pts], idx) => ({
+          label: algo,
+          data: pts,
+          borderColor: colors[idx % colors.length],
+          tension: 0.1
+        }));
+
+        if (window._chart) window._chart.destroy();
+        window._chart = new Chart(ctx, {
+          type: "line",
+          data: { datasets },
+          options: {
+            responsive: true,
+            parsing: { xAxisKey: "x", yAxisKey: "y" },
+            plugins: { legend: { labels: { color: "#e2e8f0" } } },
+            scales: {
+              x: { type: "linear", title: { display: true, text: "矩阵尺寸 (M=N=K)", color: "#e2e8f0" }, ticks: { color: "#94a3b8" } },
+              y: { title: { display: true, text: "GFLOPS", color: "#e2e8f0" }, ticks: { color: "#94a3b8" } }
+            }
+          }
+        });
+      }, [filtered]);
+
+      return (
+        React.createElement("div", null,
+          React.createElement("div", { className: "card row", style: { alignItems: "center", justifyContent: "space-between" } },
+            React.createElement("div", null, "GEMM 性能看板"),
+            React.createElement("div", { className: "row", style: { alignItems: "center" } },
+              React.createElement("select", { value: algoFilter, onChange: e => setAlgoFilter(e.target.value) },
+                algos.map(a => React.createElement("option", { key: a, value: a }, a))
+              ),
+              React.createElement("button", { onClick: refresh, disabled: loading }, loading ? "刷新中..." : "刷新")
+            )
+          ),
+          error && React.createElement("div", { className: "card", style: { color: "#ef4444" } }, error),
+          React.createElement("div", { className: "card" },
+            React.createElement("canvas", { id: "chart", height: "120" })
+          ),
+          React.createElement("div", { className: "card" },
+            React.createElement("table", { className: "table" },
+              React.createElement("thead", null,
+                React.createElement("tr", null,
+                  ["algo", "M", "N", "K", "runs", "ms_mean", "gflops_mean", "valid_rate"].map(h => React.createElement("th", { key: h }, h))
+                )
+              ),
+              React.createElement("tbody", null,
+                filtered.map((r, idx) =>
+                  React.createElement("tr", { key: idx },
+                    React.createElement("td", null, r.algo),
+                    React.createElement("td", null, r.M),
+                    React.createElement("td", null, r.N),
+                    React.createElement("td", null, r.K),
+                    React.createElement("td", null, r.runs),
+                    React.createElement("td", null, formatNumber(r.ms_mean, 3)),
+                    React.createElement("td", null, formatNumber(r.gflops_mean, 2)),
+                    React.createElement("td", null,
+                      React.createElement("span", { className: "pill " + (r.valid_rate === 1 ? "ok" : "bad") },
+                        formatNumber(r.valid_rate * 100, 1) + "%"
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          ),
+          React.createElement("div", { className: "card" },
+            React.createElement("div", null, "使用说明："),
+            React.createElement("ul", null,
+              React.createElement("li", null, "先运行 VSCode 任务 `perf-runner`（或命令行 `python scripts/perf_runner.py`），生成 perf_summary.json/csv。"),
+              React.createElement("li", null, "从 repo 根目录启动简单服务器：`python -m http.server 8000`，然后浏览器打开 http://localhost:8000/frontend/index.html 。"),
+              React.createElement("li", null, "点击右上角刷新加载最新数据；可按算法筛选。"),
+              React.createElement("li", null, "若使用 `perf_runner.py --ncu ...` 生成报告，可在下方选择并查看 ncu 报告。")
+            )
+          ),
+          React.createElement("div", { className: "card" },
+            React.createElement("div", { className: "row", style: { alignItems: "center", justifyContent: "space-between" } },
+              React.createElement("div", null, "Nsight Compute 报告（文本）"),
+              React.createElement("select", { value: ncuSel, onChange: e => setNcuSel(e.target.value) },
+                ncuList.length === 0 ? React.createElement("option", { value: "" }, "未找到 ncu 报告") :
+                  ncuList.map((r, idx) => React.createElement("option", { key: idx, value: r.file.replace(/\\\\/g, "/") }, r.kernel))
+              )
+            ),
+            React.createElement("pre", { style: { maxHeight: "320px", overflow: "auto", background: "#0f172a", padding: "12px", borderRadius: "8px", whiteSpace: "pre-wrap" } },
+              ncuText || (ncuList.length ? "选择一个报告查看..." : "无报告")
+            )
+          )
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(App));
+  </script>
+</body>
+
+</html>

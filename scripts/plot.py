@@ -4,14 +4,27 @@ import matplotlib.pyplot as plt
 
 
 def load_results(path: Path):
-    data = {}
+    by_key = {}
     with path.open(newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            algo = row["algo"]
-            m = int(row["M"])
-            gflops = float(row["gflops"])
-            data.setdefault(algo, []).append((m, gflops))
+            try:
+                algo = row["algo"]
+                m = int(row["M"])
+                n = int(row["N"])
+                k = int(row["K"])
+                g = float(row["gflops"])
+                key = (algo, m, n, k)
+                by_key.setdefault(key, []).append(g)
+            except Exception:
+                continue
+    latest = {}
+    for key, vals in by_key.items():
+        # take last occurrence for each key
+        latest[key] = vals[-1]
+    data = {}
+    for (algo, m, n, k), g in latest.items():
+        data.setdefault(algo, []).append((m, g))
     for algo in data:
         data[algo].sort(key=lambda x: x[0])
     return data

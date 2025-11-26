@@ -1,0 +1,10 @@
+[
+  {
+    "kernel": "shared_mem_matmul_kernel",
+    "file": "reports/ncu_shared_mem_matmul_kernel.txt"
+  },
+  {
+    "kernel": "tensor_core_kernel",
+    "file": "reports/ncu_tensor_core_kernel.txt"
+  }
+]
